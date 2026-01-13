@@ -1,0 +1,8 @@
+{
+  "name": "badge-app",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0"
+  }
+}
