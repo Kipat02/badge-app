@@ -4,17 +4,73 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Timbratura - Badge App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .btn { padding:10px 12px; border:1px solid #333; background:#fff; cursor:pointer; border-radius:8px; margin-right:8px; }
+    .card { border:1px solid #ddd; padding:14px; border-radius:10px; margin-top:14px; }
+    code { background:#f4f4f4; padding:2px 6px; border-radius:6px; }
+  </style>
 </head>
 <body>
   <p><a href="/dashboard.html">← Dashboard</a></p>
   <h1>Timbratura</h1>
-  <p>Qui faremo entrata/uscita.</p>
+
+  <div class="card">
+    <div id="info">Caricamento...</div>
+    <p>
+      <button class="btn" id="inBtn">Entrata</button>
+      <button class="btn" id="outBtn">Uscita</button>
+    </p>
+    <pre id="out"></pre>
+  </div>
 
   <script>
-    // protezione pagina
-    fetch("/api/me", { credentials: "include" })
-      .then(r => r.json())
-      .then(d => { if (!d.ok) window.location.href = "/login.html"; });
+    const info = document.getElementById("info");
+    const out = document.getElementById("out");
+    const inBtn = document.getElementById("inBtn");
+    const outBtn = document.getElementById("outBtn");
+
+    async function ensureAuth() {
+      const r = await fetch("/api/me", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) window.location.href = "/login.html";
+      return d;
+    }
+
+    async function loadToday() {
+      const r = await fetch("/api/punch-today", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) { out.textContent = JSON.stringify(d, null, 2); return; }
+
+      const p = d.punch;
+      info.innerHTML = `<b>Oggi:</b> <code>${d.day}</code><br>
+        Entrata: <b>${p?.in_time ?? "-"}</b> — Uscita: <b>${p?.out_time ?? "-"}</b>`;
+
+      // disabilita bottoni se già timbrato (puoi riabilitare se vuoi sovrascrivere)
+      inBtn.disabled = !!p?.in_time;
+      outBtn.disabled = !!p?.out_time;
+    }
+
+    inBtn.addEventListener("click", async () => {
+      out.textContent = "Timbratura entrata...";
+      const r = await fetch("/api/punch-in", { method: "POST", credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      out.textContent = JSON.stringify(d, null, 2);
+      await loadToday();
+    });
+
+    outBtn.addEventListener("click", async () => {
+      out.textContent = "Timbratura uscita...";
+      const r = await fetch("/api/punch-out", { method: "POST", credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      out.textContent = JSON.stringify(d, null, 2);
+      await loadToday();
+    });
+
+    (async () => {
+      await ensureAuth();
+      await loadToday();
+    })();
   </script>
 </body>
 </html>
