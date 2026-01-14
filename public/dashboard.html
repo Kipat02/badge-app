@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard - Badge App</title>
+</head>
+<body>
+  <h1>Dashboard</h1>
+  <p id="status">Caricamento...</p>
+
+  <pre id="me" style="background:#f4f4f4; padding:12px;"></pre>
+
+  <button id="logout">Logout</button>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const meEl = document.getElementById("me");
+
+    async function loadMe() {
+      statusEl.textContent = "Verifico sessione...";
+      const r = await fetch("/api/me", { credentials: "include" });
+      const data = await r.json().catch(() => ({}));
+
+      if (!data.ok) {
+        // Non autenticato → torna al login
+        window.location.href = "/login.html";
+        return;
+      }
+
+      statusEl.textContent = `Ciao ${data.user.name} (${data.user.role})`;
+      meEl.textContent = JSON.stringify(data, null, 2);
+    }
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      statusEl.textContent = "Logout...";
+      await fetch("/api/logout", { method: "POST", credentials: "include" });
+      window.location.href = "/login.html";
+    });
+
+    loadMe();
+  </script>
+</body>
+</html>
