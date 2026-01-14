@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timbratura - Badge App</title>
+</head>
+<body>
+  <p><a href="/dashboard.html">← Dashboard</a></p>
+  <h1>Timbratura</h1>
+  <p>Qui faremo entrata/uscita.</p>
+
+  <script>
+    // protezione pagina
+    fetch("/api/me", { credentials: "include" })
+      .then(r => r.json())
+      .then(d => { if (!d.ok) window.location.href = "/login.html"; });
+  </script>
+</body>
+</html>
