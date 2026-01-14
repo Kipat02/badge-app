@@ -4,16 +4,60 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Storico - Badge App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; max-width: 700px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { text-align: left; }
+    .card { border:1px solid #ddd; padding:14px; border-radius:10px; margin-top:14px; }
+  </style>
 </head>
 <body>
   <p><a href="/dashboard.html">← Dashboard</a></p>
   <h1>Storico timbrature</h1>
-  <p>Qui vedremo il calendario/lista.</p>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Giorno</th>
+          <th>Entrata</th>
+          <th>Uscita</th>
+        </tr>
+      </thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
 
   <script>
-    fetch("/api/me", { credentials: "include" })
-      .then(r => r.json())
-      .then(d => { if (!d.ok) window.location.href = "/login.html"; });
+    async function ensureAuth() {
+      const r = await fetch("/api/me", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) window.location.href = "/login.html";
+    }
+
+    async function loadList() {
+      const r = await fetch("/api/punch-list?limit=31", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) return;
+
+      const tb = document.getElementById("tb");
+      tb.innerHTML = "";
+      for (const row of d.rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.day}</td>
+          <td>${row.in_time ?? "-"}</td>
+          <td>${row.out_time ?? "-"}</td>
+        `;
+        tb.appendChild(tr);
+      }
+    }
+
+    (async () => {
+      await ensureAuth();
+      await loadList();
+    })();
   </script>
 </body>
 </html>
