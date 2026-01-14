@@ -4,41 +4,58 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard - Badge App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .card { border:1px solid #ddd; padding:14px; border-radius:10px; margin-top:14px; }
+    .btn { padding:10px 12px; border:1px solid #333; background:#fff; cursor:pointer; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    a { color:#0b57d0; }
+  </style>
 </head>
 <body>
-  <h1>Dashboard</h1>
-  <p id="status">Caricamento...</p>
+  <div class="top">
+    <div>
+      <h1 style="margin:0;">Badge App</h1>
+      <div id="hello">Caricamento...</div>
+    </div>
+    <button class="btn" id="logout">Logout</button>
+  </div>
 
-  <pre id="me" style="background:#f4f4f4; padding:12px;"></pre>
-
-  <button id="logout">Logout</button>
+  <div class="card">
+    <h2 style="margin-top:0;">Menu</h2>
+    <ul>
+      <li><a href="/badge.html">Timbratura (entrata/uscita)</a></li>
+      <li><a href="/history.html">Storico timbrature</a></li>
+      <li id="adminLink" style="display:none;"><a href="/admin.html">Area Admin</a></li>
+    </ul>
+  </div>
 
   <script>
-    const statusEl = document.getElementById("status");
-    const meEl = document.getElementById("me");
-
-    async function loadMe() {
-      statusEl.textContent = "Verifico sessione...";
+    async function getMe() {
       const r = await fetch("/api/me", { credentials: "include" });
-      const data = await r.json().catch(() => ({}));
+      return r.json().catch(() => ({}));
+    }
 
+    (async () => {
+      const data = await getMe();
       if (!data.ok) {
-        // Non autenticato → torna al login
         window.location.href = "/login.html";
         return;
       }
 
-      statusEl.textContent = `Ciao ${data.user.name} (${data.user.role})`;
-      meEl.textContent = JSON.stringify(data, null, 2);
-    }
+      document.getElementById("hello").textContent =
+        `Ciao ${data.user.name} (${data.user.role})`;
+
+      if (data.user.role === "admin") {
+        document.getElementById("adminLink").style.display = "list-item";
+      }
+    })();
 
     document.getElementById("logout").addEventListener("click", async () => {
-      statusEl.textContent = "Logout...";
       await fetch("/api/logout", { method: "POST", credentials: "include" });
       window.location.href = "/login.html";
     });
-
-    loadMe();
   </script>
 </body>
 </html>
