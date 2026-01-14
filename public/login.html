@@ -37,7 +37,11 @@
       });
 
       const data = await r.json().catch(() => ({}));
-      out.textContent = JSON.stringify(data, null, 2);
+if (data.ok) {
+  window.location.href = "/dashboard.html";
+  return;
+}
+out.textContent = JSON.stringify(data, null, 2);
     });
   </script>
 
