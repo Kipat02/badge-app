@@ -20,6 +20,10 @@
 <body>
   <p><a href="/dashboard.html">← Dashboard</a></p>
   <h1>Area Admin – Dipendenti</h1>
+  <button id="logout" style="padding:10px 12px; border:1px solid #333; background:#fff; cursor:pointer; border-radius:8px;">
+  Logout
+</button>
+
 
   <div class="card">
     <table>
@@ -74,6 +78,11 @@
     (async () => {
       await ensureAdmin();
       await loadUsers();
+      document.getElementById("logout").addEventListener("click", async () => {
+  await fetch("/api/logout", { method: "POST", credentials: "include" });
+  window.location.href = "/login.html";
+});
+
     })();
   </script>
 </body>
