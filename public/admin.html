@@ -3,20 +3,78 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin - Badge App</title>
+  <title>Admin - Dipendenti</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; max-width: 900px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { text-align: left; background:#f4f4f4; }
+    .card { border:1px solid #ddd; padding:14px; border-radius:10px; margin-top:14px; }
+    .badge { padding:3px 8px; border-radius:12px; font-size:12px; }
+    .admin { background:#fde68a; }
+    .user { background:#bfdbfe; }
+    .active { color:green; }
+    .inactive { color:red; }
+  </style>
 </head>
 <body>
   <p><a href="/dashboard.html">← Dashboard</a></p>
-  <h1>Area Admin</h1>
-  <p>Qui gestiremo dipendenti e report.</p>
+  <h1>Area Admin – Dipendenti</h1>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Email</th>
+          <th>Ruolo</th>
+          <th>Stato</th>
+          <th>Creato il</th>
+        </tr>
+      </thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
 
   <script>
-    fetch("/api/me", { credentials: "include" })
-      .then(r => r.json())
-      .then(d => {
-        if (!d.ok) window.location.href = "/login.html";
-        if (d.ok && d.user.role !== "admin") window.location.href = "/dashboard.html";
-      });
+    async function ensureAdmin() {
+      const r = await fetch("/api/me", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) window.location.href = "/login.html";
+      if (d.ok && d.user.role !== "admin") window.location.href = "/dashboard.html";
+    }
+
+    async function loadUsers() {
+      const r = await fetch("/api/admin-users", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) return;
+
+      const tb = document.getElementById("tb");
+      tb.innerHTML = "";
+
+      for (const u of d.users) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td>
+            <span class="badge ${u.role === "admin" ? "admin" : "user"}">
+              ${u.role}
+            </span>
+          </td>
+          <td class="${u.active ? "active" : "inactive"}">
+            ${u.active ? "Attivo" : "Disattivato"}
+          </td>
+          <td>${new Date(u.created_at).toLocaleDateString("it-IT")}</td>
+        `;
+        tb.appendChild(tr);
+      }
+    }
+
+    (async () => {
+      await ensureAdmin();
+      await loadUsers();
+    })();
   </script>
 </body>
 </html>
